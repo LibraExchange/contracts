@@ -104,7 +104,7 @@ contract Presale is Ownable, ReentrancyGuard {
   */
   function getRemainingTime() external view returns (uint256){
     if (hasEnded()) return 0;
-    return END_TIME - _currentBlockTimestamp();
+    return END_TIME-(_currentBlockTimestamp());
   }
 
   /**
@@ -126,7 +126,7 @@ contract Presale is Ownable, ReentrancyGuard {
   */
   function libraToDistribute() public view returns (uint256){
     if (MIN_TOTAL_RAISED_FOR_MAX_LIBRA > totalRaised) {
-      return MAX_LIBRA_TO_DISTRIBUTE * (totalRaised) / (MIN_TOTAL_RAISED_FOR_MAX_LIBRA);
+      return MAX_LIBRA_TO_DISTRIBUTE*(totalRaised)/(MIN_TOTAL_RAISED_FOR_MAX_LIBRA);
     }
     return MAX_LIBRA_TO_DISTRIBUTE;
   }
@@ -138,7 +138,7 @@ contract Presale is Ownable, ReentrancyGuard {
     if(totalAllocation == 0) return (0);
 
     UserInfo memory user = userInfo[account];
-    uint256 totalLibraAmount = user.allocation * libraToDistribute() / totalAllocation;
+    uint256 totalLibraAmount = user.allocation*(libraToDistribute())/(totalAllocation);
 
     libraAmount = totalLibraAmount;
   }
@@ -167,11 +167,11 @@ contract Presale is Ownable, ReentrancyGuard {
       UserInfo storage referrer = userInfo[referralAddress];
 
       // compute and send referrer share
-      uint256 refShareAmount = REFERRAL_SHARE * (amount) / (100);
+      uint256 refShareAmount = REFERRAL_SHARE*(amount)/(100);
       SALE_TOKEN.safeTransferFrom(msg.sender, address(this), refShareAmount);
 
-      referrer.refEarnings = referrer.refEarnings + (refShareAmount);
-      participationAmount = participationAmount - (refShareAmount);
+      referrer.refEarnings = referrer.refEarnings+(refShareAmount);
+      participationAmount = participationAmount-(refShareAmount);
 
       emit NewRefEarning(referralAddress, refShareAmount);
     }
@@ -180,21 +180,21 @@ contract Presale is Ownable, ReentrancyGuard {
     if (user.discount > 0 && user.contribution < user.discountEligibleAmount) {
 
       // Get eligible amount for the active user's discount
-      uint256 discountEligibleAmount = user.discountEligibleAmount - (user.contribution);
+      uint256 discountEligibleAmount = user.discountEligibleAmount-(user.contribution);
       if (discountEligibleAmount > amount) {
         discountEligibleAmount = amount;
       }
       // Readjust user new allocation
-      allocation = allocation + (discountEligibleAmount * (user.discount) / (100));
+      allocation = allocation+(discountEligibleAmount*(user.discount)/(100));
     }
 
     // update raised amounts
-    user.contribution = user.contribution + (amount);
-    totalRaised = totalRaised + (amount);
+    user.contribution = user.contribution+(amount);
+    totalRaised = totalRaised+(amount);
 
     // update allocations
-    user.allocation = user.allocation + (allocation);
-    totalAllocation = totalAllocation + (allocation);
+    user.allocation = user.allocation+(allocation);
+    totalAllocation = totalAllocation+(allocation);
 
     emit Buy(msg.sender, amount);
     // transfer contribution to treasury
@@ -206,10 +206,10 @@ contract Presale is Ownable, ReentrancyGuard {
    */
   function claimRefEarnings() public {
     UserInfo storage user = userInfo[msg.sender];
-    uint256 toClaim = user.refEarnings - (user.claimedRefEarnings);
+    uint256 toClaim = user.refEarnings-(user.claimedRefEarnings);
 
     if(toClaim > 0){
-      user.claimedRefEarnings = user.claimedRefEarnings + (toClaim);
+      user.claimedRefEarnings = user.claimedRefEarnings+(toClaim);
 
       emit ClaimRefEarnings(msg.sender, toClaim);
       SALE_TOKEN.safeTransfer(msg.sender, toClaim);
@@ -286,7 +286,7 @@ contract Presale is Ownable, ReentrancyGuard {
     require(totalSold < MAX_LIBRA_TO_DISTRIBUTE, "burnUnsoldTokens: no token to burn");
 
     unsoldTokensBurnt = true;
-    LIBRA.transfer(0x000000000000000000000000000000000000dEaD, MAX_LIBRA_TO_DISTRIBUTE - (totalSold));
+    LIBRA.transfer(0x000000000000000000000000000000000000dEaD, MAX_LIBRA_TO_DISTRIBUTE-(totalSold));
   }
 
   /********************************************************/
