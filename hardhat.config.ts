@@ -24,13 +24,6 @@ const remappings = fs
 
 const config: HardhatUserConfig = {
   networks: {
-    hardhat: {
-      initialBaseFeePerGas: 0,
-      forking: {
-        url: `https://opt-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-        blockNumber: 16051852
-      }
-    },
     opera: {
       url: "https://rpc.fantom.network",
       accounts: [process.env.PRIVATE_KEY!],
@@ -39,12 +32,12 @@ const config: HardhatUserConfig = {
       url: "https://rpc.testnet.fantom.network",
       accounts: [process.env.PRIVATE_KEY!],
     },
-    optimisticEthereum: {
-      url: "https://mainnet.optimism.io",
+    arbitrumEthereum: {
+      url: "https://arb1.arbitrum.io/rpc",
       accounts: [process.env.PRIVATE_KEY!],
     },
-    optimisticKovan: {
-      url: "https://kovan.optimism.io",
+    arbitrumGoerli: {
+      url: "https://goerli-rollup.arbitrum.io/rpc",
       accounts: [process.env.PRIVATE_KEY!],
     },
   },
@@ -79,8 +72,8 @@ const config: HardhatUserConfig = {
     apiKey: {
       opera: process.env.FTM_SCAN_API_KEY!,
       ftmTestnet: process.env.FTM_SCAN_API_KEY!,
-      optimisticEthereum: process.env.OP_SCAN_API_KEY!,
-      optimisticKovan: process.env.OP_SCAN_API_KEY!,
+      arbitrumEthereum: process.env.OP_SCAN_API_KEY!,
+      arbitrumGoerli: process.env.OP_SCAN_API_KEY!,
     }
   }
 };
