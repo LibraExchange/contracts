@@ -36,11 +36,11 @@ contract Presale is Ownable, ReentrancyGuard {
   uint256 public totalRaised; // raised amount, does not take into account referral shares
   uint256 public totalAllocation; // takes into account discounts
 
-  uint256 public constant MAX_LIBRA_TO_DISTRIBUTE = 15000 ether; // max LIBRA amount to distribute during the sale
+  uint256 public constant MAX_LIBRA_TO_DISTRIBUTE = 60000000 ether; // max LIBRA amount to distribute during the sale
 
   // (=300,000 USDC, with USDC having 6 decimals ) amount to reach to distribute max LIBRA amount
   uint256 public constant MIN_TOTAL_RAISED_FOR_MAX_LIBRA = 300000000000;
-  uint256 public constant MAX_TOTAL_RAISED_FOR_MAX_LIBRA = 4400000000000;
+  uint256 public constant MAX_TOTAL_RAISED_FOR_MAX_LIBRA = 6600000000000;
 
   address public immutable treasury; // treasury multisig, will receive raised amount
 
