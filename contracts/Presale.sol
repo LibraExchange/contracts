@@ -86,16 +86,6 @@ contract Presale is Ownable, ReentrancyGuard {
   }
 
   /**
-   * @dev Check whether the sale is currently active
-   *
-   * Will be marked as inactive if LIBRA has not been deposited into the contract
-   */
-  modifier isSaleActive() {
-    require(hasStarted() && !hasEnded() && LIBRA.balanceOf(address(this)) >= MAX_LIBRA_TO_DISTRIBUTE, "isActive: sale is not active");
-    _;
-  }
-
-  /**
    * @dev Check whether users can claim their purchased LIBRA
    *
    * Sale must have ended, and LP tokens must have been formed
