@@ -3,21 +3,18 @@ import { task } from "hardhat/config";
 import optimismConfig from "./constants/optimismConfig";
 import testOptimismConfig from "./constants/testOptimismConfig";
 
-import fantomConfig from "./constants/fantomConfig";
-import testFantomConfig from "./constants/testFantomConfig";
-
-task("deploy:op", "Deploys Optimism contracts").setAction(async function (
+task("deploy:op", "Deploys Arbitrum contracts").setAction(async function (
   taskArguments,
   { ethers }
 ) {
   const mainnet = false;
 
   const OP_CONFIG = mainnet ? optimismConfig : testOptimismConfig;
-  const FTM_CONFIG = mainnet ? fantomConfig : testFantomConfig;
-
   // Load
   const [
-    Velo,
+    Libra,
+    USDC,
+    Presale,
     GaugeFactory,
     BribeFactory,
     PairFactory,
@@ -28,29 +25,31 @@ task("deploy:op", "Deploys Optimism contracts").setAction(async function (
     RewardsDistributor,
     Voter,
     Minter,
-    VeloGovernor,
-    RedemptionReceiver,
-    MerkleClaim,
+    LibraGovernor
   ] = await Promise.all([
-    ethers.getContractFactory("Velo"),
+    ethers.getContractFactory("Libra"),
+    ethers.getContractFactory("USDC"),
+    ethers.getContractFactory("Presale"),
     ethers.getContractFactory("GaugeFactory"),
     ethers.getContractFactory("BribeFactory"),
     ethers.getContractFactory("PairFactory"),
     ethers.getContractFactory("Router"),
-    ethers.getContractFactory("VelodromeLibrary"),
+    ethers.getContractFactory("LibraLibrary"),
     ethers.getContractFactory("VeArtProxy"),
     ethers.getContractFactory("VotingEscrow"),
     ethers.getContractFactory("RewardsDistributor"),
     ethers.getContractFactory("Voter"),
     ethers.getContractFactory("Minter"),
-    ethers.getContractFactory("VeloGovernor"),
-    ethers.getContractFactory("RedemptionReceiver"),
-    ethers.getContractFactory("MerkleClaim"),
+    ethers.getContractFactory("LibraGovernor")
   ]);
 
-  const velo = await Velo.deploy();
-  await velo.deployed();
-  console.log("Velo deployed to: ", velo.address);
+  const libra = await Libra.deploy();
+  await libra.deployed();
+  console.log("Libra deployed to: ", libra.address);
+
+  const usdc = await USDC.deploy();
+  await usdc.deployed();
+  console.log("USDC deployed to: ", usdc.address);
 
   const gaugeFactory = await GaugeFactory.deploy();
   await gaugeFactory.deployed();
@@ -64,6 +63,17 @@ task("deploy:op", "Deploys Optimism contracts").setAction(async function (
   await pairFactory.deployed();
   console.log("PairFactory deployed to: ", pairFactory.address);
 
+  const libraLPtoken = await pairFactory.createPair(libra.address, usdc.address,false)
+  await libraLPtoken.wait();
+
+  const pairAddr = await pairFactory.getPair(libra.address, usdc.address, false)
+  const presale = await Presale.deploy(libra.address, usdc.address, pairAddr, 1680349246, 1680493246, OP_CONFIG.teamEOA);
+  await presale.deployed();
+  console.log("Presale deployed to: ", presale.address);
+
+  await libra.mint(presale.address, optimismConfig.presaleAmt)
+  console.log("Mint LIBRA to Presale Contract");
+
   const router = await Router.deploy(pairFactory.address, OP_CONFIG.WETH);
   await router.deployed();
   console.log("Router deployed to: ", router.address);
@@ -71,17 +81,17 @@ task("deploy:op", "Deploys Optimism contracts").setAction(async function (
 
   const library = await Library.deploy(router.address);
   await library.deployed();
-  console.log("VelodromeLibrary deployed to: ", library.address);
+  console.log("LibraLibrary deployed to: ", library.address);
   console.log("Args: ", router.address, "\n");
 
   const artProxy = await VeArtProxy.deploy();
   await artProxy.deployed();
   console.log("VeArtProxy deployed to: ", artProxy.address);
 
-  const escrow = await VotingEscrow.deploy(velo.address, artProxy.address);
+  const escrow = await VotingEscrow.deploy(libra.address, artProxy.address);
   await escrow.deployed();
   console.log("VotingEscrow deployed to: ", escrow.address);
-  console.log("Args: ", velo.address, artProxy.address, "\n");
+  console.log("Args: ", libra.address, artProxy.address, "\n");
 
   const distributor = await RewardsDistributor.deploy(escrow.address);
   await distributor.deployed();
@@ -118,44 +128,19 @@ task("deploy:op", "Deploys Optimism contracts").setAction(async function (
     "\n"
   );
 
-  const receiver = await RedemptionReceiver.deploy(
-    OP_CONFIG.USDC,
-    velo.address,
-    FTM_CONFIG.lzChainId,
-    OP_CONFIG.lzEndpoint,
-  );
-  await receiver.deployed();
-  console.log("RedemptionReceiver deployed to: ", receiver.address);
-  console.log("Args: ", 
-    OP_CONFIG.USDC,
-    velo.address,
-    FTM_CONFIG.lzChainId,
-    OP_CONFIG.lzEndpoint,
-    "\n"
-  );
-
-  const governor = await VeloGovernor.deploy(escrow.address);
+  const governor = await LibraGovernor.deploy(escrow.address);
   await governor.deployed();
-  console.log("VeloGovernor deployed to: ", governor.address);
+  console.log("LibraGovernor deployed to: ", governor.address);
   console.log("Args: ", escrow.address, "\n");
 
-  // Airdrop
-  const claim = await MerkleClaim.deploy(velo.address, OP_CONFIG.merkleRoot);
-  await claim.deployed();
-  console.log("MerkleClaim deployed to: ", claim.address);
-  console.log("Args: ", velo.address, OP_CONFIG.merkleRoot, "\n");
-
   // Initialize
-  await velo.initialMint(OP_CONFIG.teamEOA);
+  await libra.initialMint(OP_CONFIG.teamEOA);
   console.log("Initial minted");
 
-  await velo.setRedemptionReceiver(receiver.address);
-  console.log("RedemptionReceiver set");
+  await usdc.initialMint(OP_CONFIG.teamEOA);
+  console.log("Initial usdc minted");
 
-  await velo.setMerkleClaim(claim.address);
-  console.log("MerkleClaim set");
-
-  await velo.setMinter(minter.address);
+  await libra.setMinter(minter.address);
   console.log("Minter set");
 
   await pairFactory.setPauser(OP_CONFIG.teamMultisig);
@@ -176,28 +161,25 @@ task("deploy:op", "Deploys Optimism contracts").setAction(async function (
   await distributor.setDepositor(minter.address);
   console.log("Depositor set");
 
-  await receiver.setTeam(OP_CONFIG.teamMultisig)
-  console.log("Team set for receiver");
-
   await governor.setTeam(OP_CONFIG.teamMultisig)
   console.log("Team set for governor");
 
   // Whitelist
-  const nativeToken = [velo.address];
+  const nativeToken = [libra.address];
   const tokenWhitelist = nativeToken.concat(OP_CONFIG.tokenWhitelist);
   await voter.initialize(tokenWhitelist, minter.address);
   console.log("Whitelist set");
 
-  // Initial veVELO distro
-  await minter.initialize(
-    OP_CONFIG.partnerAddrs,
-    OP_CONFIG.partnerAmts,
-    OP_CONFIG.partnerMax
-  );
-  console.log("veVELO distributed");
+  // // Initial veLIBRA distro
+  // // await minter.initialize(
+  // //   OP_CONFIG.partnerAddrs,
+  // //   OP_CONFIG.partnerAmts,
+  // //   OP_CONFIG.partnerMax
+  // // );
+  // // console.log("veLIBRA distributed");
 
   await minter.setTeam(OP_CONFIG.teamMultisig)
   console.log("Team set for minter");
 
-  console.log("Optimism contracts deployed");
+  console.log("Arbitrum contracts deployed");
 });

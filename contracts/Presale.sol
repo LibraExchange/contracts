@@ -287,7 +287,7 @@ contract Presale is Ownable, ReentrancyGuard {
     require(totalSold < MAX_LIBRA_TO_DISTRIBUTE, "burnUnsoldTokens: no token to burn");
 
     unsoldTokensBurnt = true;
-    LIBRA.transfer(0x000000000000000000000000000000000000dEaD, MAX_LIBRA_TO_DISTRIBUTE-(totalSold));
+    LIBRA.safeTransfer(0x000000000000000000000000000000000000dEaD, MAX_LIBRA_TO_DISTRIBUTE-(totalSold));
   }
 
   /********************************************************/

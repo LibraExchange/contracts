@@ -14,6 +14,9 @@ const TEN_MILLION = ethers.BigNumber.from("10")
 const TWENTY_MILLION = ethers.BigNumber.from("20")
   .mul(MILLION)
   .mul(TOKEN_DECIMALS);
+  const SIXTY_MILLION = ethers.BigNumber.from("60")
+  .mul(MILLION)
+  .mul(TOKEN_DECIMALS);
 const PARTNER_MAX = ethers.BigNumber.from("78")
   .mul(MILLION)
   .mul(TOKEN_DECIMALS);
@@ -46,6 +49,7 @@ const optimismConfig = {
   ],
   partnerAmts: [],
   partnerMax: PARTNER_MAX,
+  presaleAmt: SIXTY_MILLION
 };
 
 export default optimismConfig;
